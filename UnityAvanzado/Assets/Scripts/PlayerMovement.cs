@@ -1,19 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using static UnityEngine.InputSystem.InputAction;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // Update is called once per frame
-    void Update()
+    [SerializeField] private float movementSpeed = 15.0f;
+    [SerializeField] private float rotationSpeed = 50.0f;
+
+    float verticalInputAmount;
+    float horizontalInputAmount;
+
+    public void OnPlayerMove(InputAction.CallbackContext callbackContext)
     {
-        transform.position = new Vector3(Mathf.Sin(Time.timeSinceLevelLoad), 0,0);
+        verticalInputAmount = callbackContext.ReadValue<Vector2>().y;
+        horizontalInputAmount = callbackContext.ReadValue<Vector2>().x;
+    }
 
-        transform.rotation = Quaternion.identity;
-        transform.Rotate(0,360 * Mathf.Sin(Time.timeSinceLevelLoad), 0, Space.World);
-
-        Vector3 scale = transform.localScale;
-        scale.y = Mathf.Max(Mathf.Abs(Mathf.Cos(Time.timeSinceLevelLoad)), 0.5f);
-        transform.localScale = scale;
+    private void Update()
+    {
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + Vector3.up * rotationSpeed * horizontalInputAmount * Time.deltaTime);
+        transform.Translate(transform.forward * movementSpeed * verticalInputAmount * Time.deltaTime, Space.World);
     }
 }
