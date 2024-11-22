@@ -180,27 +180,27 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  decelerationTime: 0.4
+  decelerationTime: 0.2
   decelerationCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
-      inSlope: -0.0053135683
-      outSlope: -0.0053135683
+      value: 0
+      inSlope: 2
+      outSlope: 2
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.08060854
+      outWeight: 0
     - serializedVersion: 3
-      time: 1.0012817
-      value: 0
-      inSlope: -1.8657321
-      outSlope: -1.8657321
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.05491252
+      inWeight: 0
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2

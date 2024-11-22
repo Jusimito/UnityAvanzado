@@ -7,11 +7,13 @@ using static UnityEngine.InputSystem.InputAction;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float maxMovementSpeed = 15.0f;
-    [SerializeField] private float rotationSpeed = 50.0f;
     [SerializeField] private float acelerationTime = 1f;
     [SerializeField] private AnimationCurve acelerationCurve;
     [SerializeField] private float decelerationTime = 1f;
     [SerializeField] private AnimationCurve decelerationCurve;
+    [Space]
+    [SerializeField] private float rotationSpeed = 50.0f;
+    [SerializeField, Range(0,1)] private float rotationForce = 0.8f;
 
     Vector2 lastInputValue, inputValue = Vector2.zero;
     float currentSpeed = 0f;
@@ -26,6 +28,7 @@ public class PlayerMovement : MonoBehaviour
         {
             acelerating = true;
             decelerating = false;
+            StopAllCoroutines();
             StartCoroutine(Acelerate());
         }
 
@@ -33,6 +36,7 @@ public class PlayerMovement : MonoBehaviour
         {
             acelerating = false;
             decelerating = true;
+            StopAllCoroutines();
             StartCoroutine(Decelerate());
         }
 
@@ -45,34 +49,37 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator Acelerate()
     {
         float time = 0;
-        while (time <= acelerationTime)
+        float baseSpeed = currentSpeed;
+        while (time <= acelerationTime && currentSpeed < maxMovementSpeed)
         {
             Debug.Log("Acelerating: " + currentSpeed);
-            currentSpeed = maxMovementSpeed * acelerationCurve.Evaluate(time / acelerationTime);
+            currentSpeed = baseSpeed + (maxMovementSpeed * acelerationCurve.Evaluate(time / acelerationTime));
             time += Time.deltaTime;
             yield return null;
         }
-
+        currentSpeed = maxMovementSpeed;
         acelerating = false;
     }
 
     private IEnumerator Decelerate()
     {
         float time = 0;
-        while (time <= decelerationTime)
+        float baseSpeed = currentSpeed;
+        while (time <= decelerationTime && currentSpeed > 0)
         {
             Debug.Log("Decelerating: " + currentSpeed);
-            currentSpeed = maxMovementSpeed * decelerationCurve.Evaluate(time / decelerationTime);
+            currentSpeed = baseSpeed - (maxMovementSpeed * decelerationCurve.Evaluate(time / decelerationTime));
             time += Time.deltaTime;
             yield return null;
         }
-
+        currentSpeed = 0;
         decelerating = false;
     }
 
     private void Update()
-    {
-        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + Vector3.up * rotationSpeed * inputValue.x * Time.deltaTime);
+    {        
+        transform.rotation = Quaternion.Euler(Vector3.Lerp(transform.rotation.eulerAngles,
+            transform.rotation.eulerAngles + Vector3.up * rotationSpeed * inputValue.x * Time.deltaTime, rotationForce));
         transform.Translate(transform.forward * currentSpeed * inputValue.y * Time.deltaTime, Space.World);
     }
 }
