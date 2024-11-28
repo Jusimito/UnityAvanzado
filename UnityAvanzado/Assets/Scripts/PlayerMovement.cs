@@ -11,9 +11,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private AnimationCurve acelerationCurve;
     [SerializeField] private float decelerationTime = 1f;
     [SerializeField] private AnimationCurve decelerationCurve;
-    [Space]
-    [SerializeField] private float rotationSpeed = 50.0f;
-    [SerializeField, Range(0,1)] private float rotationForce = 0.8f;
 
     Vector2 lastInputValue, inputValue = Vector2.zero;
     float currentSpeed = 0f;
@@ -78,8 +75,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {        
-        transform.rotation = Quaternion.Euler(Vector3.Lerp(transform.rotation.eulerAngles,
-            transform.rotation.eulerAngles + Vector3.up * rotationSpeed * inputValue.x * Time.deltaTime, rotationForce));
-        transform.Translate(transform.forward * currentSpeed * inputValue.y * Time.deltaTime, Space.World);
+        transform.Translate(new Vector3(inputValue.x, 0, inputValue.y) * currentSpeed * Time.deltaTime, Space.World);
     }
 }
