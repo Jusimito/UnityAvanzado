@@ -22,7 +22,6 @@ public class RotableAimTarget : MonoBehaviour
     {
         horizontalDegree = Vector3.Angle(transform.position - transform.parent.position, Vector3.right) * Mathf.Deg2Rad;
         startDegree = horizontalDegree;
-        Debug.Log("Start: " + startDegree);
     }
 
     public void OnPlayerLookAt(InputAction.CallbackContext callbackContext)
@@ -35,8 +34,6 @@ public class RotableAimTarget : MonoBehaviour
         horizontalDegree += rotateValue.x * horizontalRotationSpeed * Time.deltaTime;
         if (horizontalDegree < startDegree - horizontalLimit * Mathf.Deg2Rad) horizontalDegree = startDegree - horizontalLimit * Mathf.Deg2Rad;
         if (horizontalDegree > startDegree + horizontalLimit * Mathf.Deg2Rad) horizontalDegree = startDegree + horizontalLimit * Mathf.Deg2Rad;
-
-        Debug.Log("Update: " + horizontalDegree * Mathf.Rad2Deg);
 
         correctedPosition = transform.parent.position + new Vector3(radius * Mathf.Cos(horizontalDegree), baseHeight, radius * Mathf.Sin(horizontalDegree));
 
