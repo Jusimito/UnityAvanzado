@@ -328,7 +328,6 @@ GameObject:
   - component: {fileID: 84734871}
   - component: {fileID: 84734874}
   - component: {fileID: 84734873}
-  - component: {fileID: 84734872}
   m_Layer: 0
   m_Name: Face
   m_TagString: Untagged
@@ -352,19 +351,6 @@ Transform:
   m_Father: {fileID: 1568498764}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &84734872
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 84734870}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &84734873
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1417,7 +1403,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 992370783}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1505,10 +1491,60 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 992370784}
+  characterMesh: {fileID: 1568498764}
   maxVelocity: 20
-  acceleration: 20
-  deceleration: 30
-  jumpForce: 1
+  maxAceleration: 25
+  acelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.7
+      inSlope: 1.2733405
+      outSlope: 1.2733405
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.06521144
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxDeceleration: -30
+  decelerationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.4
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1.0023575
+      inSlope: 1.7456912
+      outSlope: 1.7456912
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.04859215
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  jumpForce: 15
+  gravityMultiplier: 2.3
 --- !u!1 &1160234425
 GameObject:
   m_ObjectHideFlags: 0
@@ -1678,7 +1714,6 @@ GameObject:
   - component: {fileID: 1568498764}
   - component: {fileID: 1568498767}
   - component: {fileID: 1568498766}
-  - component: {fileID: 1568498765}
   m_Layer: 0
   m_Name: Mesh
   m_TagString: Untagged
@@ -1702,20 +1737,6 @@ Transform:
   m_Father: {fileID: 992370785}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &1568498765
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1568498763}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &1568498766
 MeshRenderer:
   m_ObjectHideFlags: 0
