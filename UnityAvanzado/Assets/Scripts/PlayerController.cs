@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
+using Cinemachine;
 
 public enum MovementState
 {
@@ -13,10 +14,17 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private CharacterController controller;
     [SerializeField] private Transform characterMesh;
+    [SerializeField] private CameraController cameraController;
+    [Space]
     [SerializeField] private float maxVelocity = 10.0f;
+    [SerializeField] private float rotationSpeed = 0.1f;
+    [SerializeField, Range(0, 1)] private float rotationModificationAmount = 0.5f;
+    [SerializeField, Range(0,1)] private float inertiaModificationValue = 0.5f;
     [SerializeField] private float maxAceleration = 1f;
+    [SerializeField] private float acelerationTime = 1f;
     [SerializeField] private AnimationCurve acelerationCurve;
     [SerializeField] private float maxDeceleration = 3f;
+    [SerializeField] private float decelerationTime = 1f;
     [SerializeField] private AnimationCurve decelerationCurve;
     [Space]
     [SerializeField] private float jumpForce = 5.0f;
@@ -26,32 +34,39 @@ public class PlayerController : MonoBehaviour
     private MovementState movementState = MovementState.Decelerating;
 
     private float currentAcceleration;
-    private float velocity;
+    private Vector2 horizontalVelocity;
     private float yVelocity;
-    private Vector2 inputValue;
+    private Vector2 movementInputValue;
+    private Vector2 lastRotationInputValue;
+    private Vector2 rotationInputValue;
     private bool isGrounded = true;
     private bool jumpPressed = false;
 
     Sequence landAnimation;
 
-    private void Start()
-    {
-        landAnimation = DOTween.Sequence();
-        landAnimation.SetAutoKill(false);
-        landAnimation.Append(characterMesh.transform.DOScaleY(1.2f, 0.05f).SetEase(Ease.InFlash));
-        landAnimation.Append(characterMesh.transform.DOScaleY(0.6f, 0.1f).SetEase(Ease.InFlash));
-        landAnimation.Append(characterMesh.transform.DOScaleY(1.0f, 0.1f).SetEase(Ease.OutSine));
-    }
+    public Vector2 MovementInputValue => movementInputValue;
+    public Vector2 RotationInputValue => rotationInputValue;
+    public Vector2 LastRotationInputValue => lastRotationInputValue;
+    public float RotationModificationAmount => rotationModificationAmount;
+    public Vector2 HorizontalVelocity => horizontalVelocity;
+    public float MaxVelocity => maxVelocity;
+
     public void OnPlayerMove(InputAction.CallbackContext callbackContext)
     {
-        inputValue = callbackContext.ReadValue<Vector2>();
+        movementInputValue = callbackContext.ReadValue<Vector2>();
+    }
+
+    public void OnPlayerRotate(InputAction.CallbackContext callbackContext)
+    {
+        lastRotationInputValue = rotationInputValue;
+        rotationInputValue = callbackContext.ReadValue<Vector2>();
     }
 
     public void OnJumpPressed(InputAction.CallbackContext callbackContext)
     {
         bool lastJumpPressed = jumpPressed;
         jumpPressed = callbackContext.ReadValue<float>() > 0;
-        if (!lastJumpPressed && jumpPressed)
+        if (!lastJumpPressed && jumpPressed && isGrounded)
         {
             Sequence jumpAnimation = DOTween.Sequence();
             jumpAnimation.Append(characterMesh.transform.DOScaleY(0.6f, 0.05f).SetEase(Ease.InFlash));
@@ -69,11 +84,13 @@ public class PlayerController : MonoBehaviour
         RotatePlayer();
         CheckAccelerationValue();
         ProcessInput();
+
+        cameraController.UpdateCameraState(this);
     }
 
     private void LateUpdate()
     {
-        Vector3 movementAmount = (transform.forward * velocity * Time.deltaTime) + (transform.up * yVelocity * Time.deltaTime);
+        Vector3 movementAmount = (transform.forward * horizontalVelocity.y * Time.deltaTime) + (transform.up * yVelocity * Time.deltaTime) + (transform.right * horizontalVelocity.x * Time.deltaTime);
         controller.Move(movementAmount);
     }
 
@@ -88,6 +105,11 @@ public class PlayerController : MonoBehaviour
             landAnimation.Append(characterMesh.transform.DOScaleY(0.6f, 0.1f).SetEase(Ease.InFlash));
             landAnimation.Append(characterMesh.transform.DOScaleY(1.0f, 0.1f).SetEase(Ease.OutSine));
             landAnimation.Play();
+
+            if (yVelocity <= -10)
+            {
+                cameraController.ShakeCamera();
+            }
         }
         if (isGrounded)
         {
@@ -97,15 +119,14 @@ public class PlayerController : MonoBehaviour
 
     private void RotatePlayer()
     {
-        if (inputValue != Vector2.zero)
-        {
-            gameObject.transform.forward = new Vector3(inputValue.x, 0, inputValue.y);
-        }
+        Vector3 currentRotation = transform.rotation.eulerAngles;
+        Vector3 nextRotation = currentRotation + (Vector3.up * rotationInputValue.x * rotationSpeed);
+        transform.rotation = Quaternion.Euler(Vector3.Lerp(currentRotation, nextRotation, rotationModificationAmount));
     }
 
     private void CheckAccelerationValue()
     {
-        if (inputValue != Vector2.zero)
+        if (movementInputValue != Vector2.zero)
         {
             if(movementState == MovementState.Decelerating)
             {
@@ -114,7 +135,7 @@ public class PlayerController : MonoBehaviour
             }
             if(movementState == MovementState.Accelerating)
             {
-                currentAcceleration = maxAceleration * acelerationCurve.Evaluate(Time.time - controlTime);
+                currentAcceleration = maxAceleration * acelerationCurve.Evaluate((Time.time - controlTime) / acelerationTime);
                 if (currentAcceleration >= maxAceleration) movementState = MovementState.MaxAcceleration;
             }
         }
@@ -127,25 +148,35 @@ public class PlayerController : MonoBehaviour
             }
             if (movementState == MovementState.Decelerating)
             {
-                currentAcceleration = maxDeceleration * decelerationCurve.Evaluate(Time.time - controlTime);
+                currentAcceleration = maxDeceleration * decelerationCurve.Evaluate((Time.time - controlTime) / decelerationTime);
             }
         }
     }
 
     private void ProcessInput()
     {
-        if (inputValue != Vector2.zero)
+        if (movementInputValue != Vector2.zero)
         {
-            velocity += inputValue.magnitude * currentAcceleration * Time.deltaTime;
+            if(Mathf.Sign(horizontalVelocity.x) != Mathf.Sign(movementInputValue.x))
+            {
+                horizontalVelocity.x *= inertiaModificationValue;
+            }
+            if (Mathf.Sign(horizontalVelocity.y) != Mathf.Sign(movementInputValue.y))
+            {
+                horizontalVelocity.y *= inertiaModificationValue;
+            }
+            horizontalVelocity += movementInputValue * currentAcceleration * Time.deltaTime;
         }
         else
         {
-            velocity += currentAcceleration * velocity * Time.deltaTime;
+            horizontalVelocity += currentAcceleration * horizontalVelocity * Time.deltaTime;
         }
-        
-        velocity = Mathf.Max(velocity, 0);
-        velocity = Mathf.Min(velocity, maxVelocity);
-        
+
+        horizontalVelocity.x = Mathf.Max(horizontalVelocity.x, -maxVelocity);
+        horizontalVelocity.x = Mathf.Min(horizontalVelocity.x, maxVelocity);
+        horizontalVelocity.y = Mathf.Max(horizontalVelocity.y, -maxVelocity);
+        horizontalVelocity.y = Mathf.Min(horizontalVelocity.y, maxVelocity);
+
         if (!isGrounded)
         {
             yVelocity += gravityMultiplier * Physics.gravity.y * Time.deltaTime;

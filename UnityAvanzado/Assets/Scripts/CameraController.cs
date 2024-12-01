@@ -1,25 +1,34 @@
+using Cinemachine;
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    [SerializeField] private Transform targetToFollow;
-
-    private Vector3 lastTargetPosition;
-    private Vector3 targetDelta;
+    [SerializeField] private CinemachineVirtualCamera virtualCamera;
+    [SerializeField] private float minCameraDistance;
+    [SerializeField] private float maxCameraDistance;
+    CinemachineComposer composer;
+    Cinemachine3rdPersonFollow cinemachineFollow;
 
     private void Start()
     {
-        lastTargetPosition = targetToFollow.position;
+        composer = virtualCamera.GetCinemachineComponent<CinemachineComposer>();
+        cinemachineFollow = virtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void UpdateCameraState(PlayerController playerController)
     {
-        targetDelta = targetToFollow.position - lastTargetPosition;
-        lastTargetPosition = targetToFollow.position;
+        cinemachineFollow.CameraDistance = Mathf.Lerp(minCameraDistance, maxCameraDistance, 
+            MathExtensions.Remap(playerController.HorizontalVelocity.magnitude, 0, playerController.MaxVelocity, 0, 1));
 
-        transform.position += targetDelta;    
+        composer.m_ScreenX = MathExtensions.Remap(-Mathf.Lerp(playerController.RotationInputValue.x, playerController.LastRotationInputValue.x, playerController.RotationModificationAmount),
+            -1, 1, 0.3f, 0.7f);
+    }
+
+    public void ShakeCamera() 
+    {
+        transform.DOShakePosition(0.1f);
     }
 }
