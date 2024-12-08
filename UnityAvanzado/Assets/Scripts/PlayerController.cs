@@ -85,7 +85,10 @@ public class PlayerController : MonoBehaviour
         CheckAccelerationValue();
         ProcessInput();
 
-        cameraController.UpdateCameraState(this);
+        if (cameraController != null)
+        {
+            cameraController.UpdateCameraState(this);
+        }
     }
 
     private void LateUpdate()
